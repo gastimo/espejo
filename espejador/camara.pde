@@ -54,5 +54,6 @@ class Camara {
   public boolean inicializada() {
     return inicializada;
   }
+ 
 }
   

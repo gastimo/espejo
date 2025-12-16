@@ -1,5 +1,5 @@
 // 
-// FRAGMENTADOR
+// FRAGMENTADOR >>> (TRANSFORMADOR)
 // Objeto responsable de realizar la fragmentación de la imagen
 // capturada en vivo, para desplegarla en el "Espejo de Leds".
 //
@@ -36,31 +36,59 @@ final int FRAG06_SATURACION = 52;
 final int FRAG06_BRILLO     = -11;
 
 
-class Fragmentador {
-  
+/**
+ * Fragmentador
+ * Clase para fragmentar (reducir a cuadros o píxeles) una imagen. 
+ */
+class Fragmentador implements Transformador {
+  PApplet ventana;
   int cuadrosAncho, cuadrosAlto;
+  int anchoFragmento, altoFragmento;
   int ajusteTinte, ajusteSaturacion, ajusteBrillo;
+  PImage imagenBase;
+  PImage imagenFragmentada;
+  PGraphics imagenSalida;
+  boolean actualizarSalida = true;
+  int salidaAncho = 0;
+  int salidaAlto = 0;
+  
 
-  public Fragmentador(int ancho, int alto) {
+  /**
+   * constructor
+   * El constructor de la clase recibe el tamaño final en píxeles
+   * (ancho y alto) que tendrá la imagen fragmentada. La imagen a
+   * fragmentar se indica en la invocación del método "procesar".
+   */
+  public Fragmentador(PApplet contenedor, int ancho, int alto) {
+    ventana          = contenedor;
     cuadrosAncho     = ancho;
     cuadrosAlto      = alto;
+    anchoFragmento   = 1;
+    altoFragmento    = 1;
     ajusteTinte      = FRAG00_TINTE;
     ajusteSaturacion = FRAG00_SATURACION;
     ajusteBrillo     = FRAG00_BRILLO;
   }
 
+  public Fragmentador() {
+    this(null, 0, 0);
+  }
+  
   
   /**
    * procesar
    * Crear una imagen como una versión pixelada de la imagen recibida como argumento. 
-   * El tamaño de los píxeles dependen de la anchura y la altura del "Fragmentador".
-   * La imagen es, además, espejada horizontalmente para que funcione como "espejo".
+   * El tamaño de los píxeles dependen del ancho y el alto indicados en el constructor.
+   * La imagen es, además, reflejada horizontalmente para que funcione como "espejo".
+   * Adicionalmente, el color de los pixeles son manipulados según la configuración 
+   * del "Fragmentador" (se modifica el tinte, la saturación y el brillo).
    */
-  PImage procesar(PImage imagen) {
+  public void procesar(PImage imagen) {
     int indice = 0;
     int ancho_fragmento = imagen.width  / cuadrosAncho;
     int alto_fragmento  = imagen.height / cuadrosAlto;
-    PImage imagenFragmentada = createImage(cuadrosAncho, cuadrosAlto, RGB);
+    imagenBase = imagen;
+    imagenFragmentada = createImage(cuadrosAncho, cuadrosAlto, RGB);
     imagenFragmentada.loadPixels();
     
     push();
@@ -79,34 +107,111 @@ class Fragmentador {
       }
     }
     imagenFragmentada.updatePixels();
+    actualizarSalida = true;
     pop();
-    return imagenFragmentada;
   }
   
   
+  /**
+   * imagen
+   * Retorna el resultado del procesamiento de la imagen original
+   * en la forma de otra imagen (PImage) transformada.
+   */ 
+  public PImage imagen() {
+    return imagenFragmentada;
+  }
+
+
+  /**
+   * imagenOriginal
+   * Retorna la imagen original que se le pasó al método procesar
+   * pero sin haberle realizado ninguna transformación.
+   */
+  public PImage imagenOriginal() {
+    return imagenBase;
+  }
+
+
 
   /**
    * mostrar
-   * Dibuja la imagen fragmentada en la ventana principal a partir
-   * de las coordenadas x e y recibidas como argumento.
+   * Dibuja la imagen fragmentada en la ventana principal a partir de las
+   * coordenadas <x,y> recibidas como argumento. Básicamente, escala la
+   * imagen fragmentada para dibujarla del ancho y alto indicados, 
+   * dibujando cada pixel como un rectángulo de color sólido.
    */
-  void mostrar(PImage imagen, int posX, int posY, int ancho, int alto) {
-    int ancho_fragmento = ancho / cuadrosAncho;
-    int alto_fragmento  = alto  / cuadrosAlto;
-    int indice = 0;
-    push();
-    for (int j = 0; j < cuadrosAlto; j++) {
-      for (int i = 0; i < cuadrosAncho; i++) {
-        fill(imagen.pixels[indice]);
-        rect(posX + (i * ancho_fragmento), posY + (j * alto_fragmento), ancho_fragmento, alto_fragmento);
-        indice++;
-      }
-    }
-    pop();
+  void mostrar(int posX, int posY, int ancho, int alto) {
+    actualizarSalida(ancho, alto);
+    image(salida(ancho, alto), posX, posY, ancho, alto);
   }
   
   
+  /**
+   * salida
+   * Retorna una imagen (PImage) con la imagen fragmentada (pixelada) pero
+   * escalada a los valores de ancho y alto recibidos como argumento.
+   */
+  public PImage salida(int ancho, int alto) {
+    actualizarSalida(ancho, alto);
+    return imagenSalida.get();
+  }
   
+  
+  /**
+   * actualizarSalida
+   * Método privado que actualiza los píxeles de la imagen fragmentada de salida
+   * (escalada) en caso que no se haya realizado después de la última vez que se 
+   * ejecutó la función "procesar" o que las dimensiones hayan variado. 
+   */
+  private void actualizarSalida(int ancho, int alto) {
+    inicializarSalida(ancho, alto);
+    if (actualizarSalida) {
+      push();
+      int indice = 0;
+      imagenSalida.beginDraw();
+      imagenSalida.background(0);
+      for (int j = 0; j < cuadrosAlto; j++) {
+        for (int i = 0; i < cuadrosAncho; i++) {
+          imagenSalida.fill(imagenFragmentada.pixels[indice]);
+          imagenSalida.strokeWeight(1);
+          imagenSalida.stroke(0);
+          imagenSalida.rect(i * anchoFragmento, j * altoFragmento, anchoFragmento, altoFragmento);
+          indice++;
+        }
+      }
+      imagenSalida.endDraw();
+      actualizarSalida = false;
+      pop();
+    }
+  }
+  
+  
+  /**
+   * inicializarSalida
+   * Verifica si la imagen fragmentada de salida debe ser incializada,
+   * ya sea por tratarse de la primera vez o porque el ancho o la altura
+   * indicados son diferentes o los pedidos anteriormente.
+   */
+  private void inicializarSalida(int ancho, int alto) {
+    if (salidaAncho == 0 || salidaAlto == 0 ||
+        salidaAncho != ancho || salidaAlto != alto) {
+      salidaAncho = ancho;
+      salidaAlto = alto;
+      anchoFragmento = ancho / cuadrosAncho;
+      altoFragmento  = alto  / cuadrosAlto;
+      imagenSalida = createGraphics(ancho, alto, VIDEO_RENDERER);
+      actualizarSalida = true;
+    }
+  }
+  
+  
+  /**
+   * configurar
+   * Modifica los parámetros de la configuración del "Fragmentador" relacionados
+   * con los ajustes del color de cada pixel de la imagen (se guardan coeficientes
+   * que alteran el tinte, la saturación y el brillo de cada pixel) organizados
+   * en diferentes configuraciones pre-establecidas.
+   */
   void configurar(char modo) {
     if (modo == '0') {
       ajusteTinte      = FRAG00_TINTE;
