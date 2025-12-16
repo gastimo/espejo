@@ -199,7 +199,7 @@ class Fragmentador implements Transformador {
       salidaAlto = alto;
       anchoFragmento = ancho / cuadrosAncho;
       altoFragmento  = alto  / cuadrosAlto;
-      imagenSalida = createGraphics(ancho, alto, VIDEO_RENDERER);
+      imagenSalida = createGraphics(ancho, alto, VIDEO_RENDER);
       actualizarSalida = true;
     }
   }

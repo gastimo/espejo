@@ -1,5 +1,5 @@
 // 
-// IMAGISTA
+// PROCESADOR
 // Objeto que se encarga de procesar las imágenes de video capturadas por
 // la cámara, analizarlas e interpretarlas para calcular el "Flujo Óptico", 
 // es decir, la cantidad de movimiento en cada celda de la imagen.
@@ -15,22 +15,22 @@ import java.awt.Rectangle;
 
 
 /**
- * Imagista
+ * Procesador
  * Componente responsable de interpretar las imágenes de video capturadas 
  * por la cámara para calcular su "Flujo Óptico" mediante la librería OpenCV.
  */
-class Imagista {
+class Procesador {
   OpenCV opencv;
   Matriz matriz;
   float flujo[][];
 
   
-  public Imagista(PApplet contenedor, int ancho, int alto, int columnas, int filas) {
+  public Procesador(PApplet contenedor, int ancho, int alto, int columnas, int filas) {
     matriz = new Matriz(columnas, filas, ancho, alto);
     opencv = new OpenCV(contenedor, ancho, alto);
   }
   
-  public void procesar(PImage imagen, float techo) {
+  public void calcular(PImage imagen, float techo) {
     opencv.loadImage(imagen);
     opencv.calculateOpticalFlow();
     matriz.calcular(opencv);

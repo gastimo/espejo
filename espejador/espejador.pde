@@ -23,12 +23,12 @@ final int PROPORCION_ANCHO = 11;
 final int PROPORCION_ALTO  = 25;
 
 
-// RENDERER POR DEFECTO PARA LA GENERACIÓN DEL VIDEO
+// RENDER POR DEFECTO PARA LA GENERACIÓN DEL VIDEO
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-// Por defecto, Processing utiliza el "renderer build-in" de Java (JAVA2D).
+// Por defecto, Processing utiliza el "render built-in" de Java (JAVA2D).
 // Para poder utilizar "Spout" o cualquier función que requiera hacer uso del
 // procesador gráfico (OpenGL o gráficos 3D) se requiere usar P2D o P3D
-final String VIDEO_RENDERER = JAVA2D;
+final String VIDEO_RENDER = JAVA2D;
 
 
 // DEFINICIÓN DE LAS DIMENSIONES (EN PÍXELES) DE LAS VISTAS, REGIONES Y ESPACIADOS 
@@ -100,7 +100,7 @@ final int   FLUJO_OPTICO_FILAS    = 10;
 // de los transmisores para el envío de los mensajes (OSC y/o serial).
 Camara camara;
 Difusora difusora;
-Imagista imagista;
+Procesador procesador;
 Transformador espejo1;
 Transformador espejo2;
 Transformador espejo3;
@@ -118,8 +118,8 @@ PImage imagenRecortada;
  * de la ventana de previsualización (salida del video).
  */
 void settings() {
-  //size(1280, 720);
-  size(VIDEO_ANCHO, VIDEO_ALTO, VIDEO_RENDERER);
+  //size(1280, 720, VIDEO_RENDER);
+  size(VIDEO_ANCHO, VIDEO_ALTO, VIDEO_RENDER);
 }
 
 
@@ -130,20 +130,21 @@ void settings() {
  */
 void setup() {
   surface.setLocation(0, 0);
-  frameRate(30);
+  frameRate(15);
   textureMode(NORMAL);
   colorMode(RGB, 255); 
   background(0);
-      
+
+  
   // 1. INICIALIZACIÓN DE OBJETOS
   // Se crean las instancias de los objetos para capturar, analizar y también
-  // para crear las versiones fragmentadas de la imagen de la çamara.
+  // para crear las versiones transformadas de la imagen de la çamara.
   // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv  
-  camara   = new Camara(this);
-  imagista = new Imagista(this, CAMARA_ANCHO, CAMARA_ALTO, FLUJO_OPTICO_COLUMNAS, FLUJO_OPTICO_FILAS);
-  espejo1  = new Fragmentador(this, PROPORCION_ANCHO, PROPORCION_ALTO);
-  espejo2  = new Fraccionador(this, VISTA_ANCHO / 10, VISTA_ALTO / 10);
-  espejo3  = new Fragmentador(this, VISTA_ANCHO / 6, VISTA_ALTO / 6);
+  camara     = new Camara(this);
+  procesador = new Procesador(this, CAMARA_ANCHO, CAMARA_ALTO, FLUJO_OPTICO_COLUMNAS, FLUJO_OPTICO_FILAS);
+  espejo1    = new Fragmentador(this, PROPORCION_ANCHO, PROPORCION_ALTO);
+  espejo2    = new Fraccionador(this, VISTA_ANCHO / 10, VISTA_ALTO / 10);
+  espejo3    = new Fragmentador(this, VISTA_ANCHO / 6, VISTA_ALTO / 6);
 
 
   // 2. INICIALIZACIÓN DE TRANSMISORES (OSC Y SERIAL)
@@ -178,7 +179,7 @@ void draw() {
     camara.capturar();
     imagenOriginal  = camara.video().get(0, 0, CAMARA_ANCHO, CAMARA_ALTO);
     imagenRecortada = imagenOriginal.get(CAMARA_ANCHO/2 - REGION_DE_INTERES_ANCHO/2, 0, REGION_DE_INTERES_ANCHO, REGION_DE_INTERES_ALTO);
-    imagista.procesar(imagenOriginal, FLUJO_OPTICO_TECHO);
+    procesador.calcular(imagenOriginal, FLUJO_OPTICO_TECHO);
     espejo1.procesar(imagenRecortada);
     espejo2.procesar(imagenRecortada);
     espejo3.procesar(imagenRecortada);
@@ -201,7 +202,7 @@ void draw() {
     }
     
     // ENVÍO DE MENSAJES DEL FLUJO ÓPTICO AL "SONORIZADOR" (para disparar los audios)
-    transmisorDeEventos.enviar(imagista.flujoOptico(), MENSAJE_OSC_FLUJO_OPTICO);
+    transmisorDeEventos.enviar(procesador.flujoOptico(), MENSAJE_OSC_FLUJO_OPTICO);
     
     
     
@@ -220,12 +221,12 @@ void draw() {
     
     // PRIMERA COLUMNA: imagen original de la webcam y "Flujo Óptico"
     image(imagenOriginal, posColumna, posFilaSuperior);
-    imagista.mostrar(posColumna, posFilaInferior, FLUJO_OPTICO_TECHO);
+    procesador.mostrar(posColumna, posFilaInferior, FLUJO_OPTICO_TECHO);
     posColumna += imagenOriginal.width + SEPARADOR;
     
     // SEGUNDA COLUMNA: imagen recortada (región de interés) y el "Espejo 1" (la "Pantalla de Leds")
     image(imagenRecortada, posColumna, posFilaSuperior, REGION_DE_INTERES_ANCHO, REGION_DE_INTERES_ALTO);
-    //((Fraccionador) espejo2).mostrarFraccionado(posColumna, posFilaSuperior);
+    ((Fraccionador) espejo2).mostrarFraccionado(posColumna, posFilaSuperior);
     espejo1.mostrar(posColumna, posFilaInferior, REGION_DE_INTERES_ANCHO, REGION_DE_INTERES_ALTO);
     posColumna += REGION_DE_INTERES_ANCHO + SEPARADOR;
     

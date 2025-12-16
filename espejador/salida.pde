@@ -33,7 +33,7 @@ class Salida {
     ancho = salidaAncho;
     alto = salidaAlto;
     shader = loadShader("shader.txt");
-    salidaShader= createGraphics(salidaAncho, salidaAlto, VIDEO_RENDERER);
+    salidaShader= createGraphics(salidaAncho, salidaAlto, VIDEO_RENDER);
   }
   
   
