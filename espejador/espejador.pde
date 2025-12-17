@@ -16,37 +16,22 @@ final int CAMARA_ANCHO = 640;
 final int CAMARA_ALTO  = 480;
 
 
-// DEFINICIÓN DE LA PROPORCIÓN (ASPECT RATIO) DE LA REGIÓN DE INTERÉS (RECORTE)
+
+// DEFINICIÓN DE LA PROPORCIÓN (ASPECT RATIO) DE LAS PANTALLAS ESPEJOS
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-// La proporción de la imagen reflejada debe coincidir con la del soporte acrílico donde se proyectará (11x25)
+// La proporción de la imagen debe coincidir con la del soporte acrílico donde se proyectará (11x25)
 final int PROPORCION_ANCHO = 11;
 final int PROPORCION_ALTO  = 25;
 
 
-// RENDER POR DEFECTO PARA LA GENERACIÓN DEL VIDEO
+
+// DEFINICIÓN DEL MODO DE VISUALIZACIÓN DEL VIDEO
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-// Por defecto, Processing utiliza el "render built-in" de Java (JAVA2D).
-// Para poder utilizar "Spout" o cualquier función que requiera hacer uso del
-// procesador gráfico (OpenGL o gráficos 3D) se requiere usar P2D o P3D
-final String VIDEO_RENDER = JAVA2D;
-
-
-// DEFINICIÓN DE LAS DIMENSIONES (EN PÍXELES) DE LAS VISTAS, REGIONES Y ESPACIADOS 
-// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-// Tamaño de la ventana de previsualización del módulo
-final int SEPARADOR = 6;
-
-// La región de interés es el área de la imagen capturada que se procesa (la región central)
-final int REGION_DE_INTERES_ANCHO = PROPORCION_ANCHO * CAMARA_ALTO / PROPORCION_ALTO;
-final int REGION_DE_INTERES_ALTO  = CAMARA_ALTO;
-
-// Dimensiones de las vistas (imágenes espejadas a generar a partir de la región de interés)
-final int VISTA_ALTO  = CAMARA_ALTO * 2 + SEPARADOR;
-final int VISTA_ANCHO = VISTA_ALTO * PROPORCION_ANCHO / PROPORCION_ALTO;
-
-// Tamaño de la ventana de previsualización del módulo (salida del video)
-final int VIDEO_ANCHO = CAMARA_ANCHO + REGION_DE_INTERES_ANCHO + (VISTA_ANCHO * 2) + (SEPARADOR * 3);
-final int VIDEO_ALTO  = VISTA_ALTO;
+// En modo "Monitoreo" se muestran en la ventana vistas intermedias de proceso 
+// para supervisar el funcionamiento del programa. De lo contrario, en la ventana
+// solo se muestran las tres vistas que serán mapeadas a los espejos/pantallas.
+// 
+boolean MODO_MONITOREO_ACTIVADO = false;
 
 
 
@@ -108,7 +93,7 @@ Transmisor transmisorDePixeles;
 TransmisorOSC transmisorDeEventos;
 PImage imagenOriginal;
 PImage imagenRecortada;
-
+Salida SALIDA = new Salida(MODO_MONITOREO_ACTIVADO);
 
 
 
@@ -118,8 +103,7 @@ PImage imagenRecortada;
  * de la ventana de previsualización (salida del video).
  */
 void settings() {
-  //size(1280, 720, VIDEO_RENDER);
-  size(VIDEO_ANCHO, VIDEO_ALTO, VIDEO_RENDER);
+  size(SALIDA.VIDEO_ANCHO, SALIDA.VIDEO_ALTO, SALIDA.VIDEO_RENDER);
 }
 
 
@@ -134,17 +118,23 @@ void setup() {
   textureMode(NORMAL);
   colorMode(RGB, 255); 
   background(0);
+  fill(0);
 
   
   // 1. INICIALIZACIÓN DE OBJETOS
   // Se crean las instancias de los objetos para capturar, analizar y también
-  // para crear las versiones transformadas de la imagen de la çamara.
+  // para crear las versiones transformadas de la imagen de la çamara. 
+  // Este módulo genera gráfica para tres vistas o "Espejos Transformantes":
+  // - La vista del "Fragmentador": Espejo central del tríptico (pantalla de leds)
+  // - La vista del "Fraccionador": Espejo lateral izquierdo del tríptico
+  // - La vista del "Fracturador" : Espejo lateral derecho del tríptico
   // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv  
   camara     = new Camara(this);
   procesador = new Procesador(this, CAMARA_ANCHO, CAMARA_ALTO, FLUJO_OPTICO_COLUMNAS, FLUJO_OPTICO_FILAS);
   espejo1    = new Fragmentador(this, PROPORCION_ANCHO, PROPORCION_ALTO);
-  espejo2    = new Fraccionador(this, VISTA_ANCHO / 10, VISTA_ALTO / 10);
+  espejo2    = new Fraccionador(this, SALIDA.VISTA_ANCHO / 10, SALIDA.VISTA_ALTO / 10);
   espejo3    = new Fracturador(espejo2, 6);
+
 
 
   // 2. INICIALIZACIÓN DE TRANSMISORES (OSC Y SERIAL)
@@ -155,11 +145,13 @@ void setup() {
   transmisorDePixeles = REFLECTAR_PIXELES ? new TransmisorOSC(this, PUERTO_DEL_ESPEJADOR, IP_DEL_REFLECTOR, PUERTO_DEL_REFLECTOR) : new TransmisorSerial(this);
   
   
+  
   // 3. INICIALIZACIÓN DE LA TRANSMISIÓN
   // Creación de la "Difusora" para la transmisión del video generado por este 
   // módulo a través de Spout para que pueda ser, luego, mapeado y proyectado.
+  // La transmisión via "Spout" sólo es requerida si se va a hacer un mapping.
   // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-  //difusora = new Difusora(this);
+  //difusora = new Difusora(this); 
 }
 
 
@@ -178,7 +170,7 @@ void draw() {
     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     camara.capturar();
     imagenOriginal  = camara.video().get(0, 0, CAMARA_ANCHO, CAMARA_ALTO);
-    imagenRecortada = imagenOriginal.get(CAMARA_ANCHO/2 - REGION_DE_INTERES_ANCHO/2, 0, REGION_DE_INTERES_ANCHO, REGION_DE_INTERES_ALTO);
+    imagenRecortada = imagenOriginal.get(CAMARA_ANCHO/2 - SALIDA.REGION_DE_INTERES_ANCHO/2, 0, SALIDA.REGION_DE_INTERES_ANCHO, SALIDA.REGION_DE_INTERES_ALTO);
     procesador.calcular(imagenOriginal, FLUJO_OPTICO_TECHO);
     espejo1.procesar(imagenRecortada);
     espejo2.procesar(imagenRecortada);
@@ -208,43 +200,64 @@ void draw() {
     
     // 3. RENDER DEL VIDEO DE SALIDA DEL MÓDULO
     // Se lleva a cabo el render del video de salida en la ventana principal de Processing.
-    // Este video es, en realidad, un mosaico compuesto de varias vistas. A la derecha se
-    // muestran las vistas finales (los "Espejos") que serán transmitidas (via "Spout"), 
-    // mapeadas y proyectadas sobre las pantallas. A la izquierda, se muestran las "Vistas 
-    // de Monitoreo", es decir, previsualizaciones intermedias del proceso de captura de la 
-    // webcam, de su análisis y procesamiento a través de OpenCV (ej. cálculo del "Flujo 
-    // Óptico") y de la fragmentación a realizar para mostrar en la "Pantalla de Leds".
+    // - Modo "Monitoreo": el video es un mosaico compuesto de varias vistas. A la derecha 
+    //                     se muestran las vistas finales (los "Espejos") a mapear/proyectar. 
+    //                     A la izquierda, se muestran las "Vistas de Monitoreo", es decir, 
+    //                     previsualizaciones intermedias del proceso de captura de la 
+    //                     webcam, de su análisis y procesamiento a través de OpenCV.
+    // - Modo "Salida"   : el video contiene únicamente las tres vistas que corresponden a
+    //                     cada uno de los espejos del tríptico: la vista del "Fragmentador"
+    //                     (pantalla de leds), la del "Fraccionador" y la del "Fracturador".
     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-    int posColumna = 0;
-    int posFilaSuperior = 0;
-    int posFilaInferior = CAMARA_ALTO + SEPARADOR;
-    
-    // PRIMERA COLUMNA: imagen original de la webcam y "Flujo Óptico"
-    image(imagenOriginal, posColumna, posFilaSuperior);
-    procesador.mostrar(posColumna, posFilaInferior, FLUJO_OPTICO_TECHO);
-    posColumna += imagenOriginal.width + SEPARADOR;
-    
-    // SEGUNDA COLUMNA: imagen recortada (región de interés) y el "Espejo 1" (la "Pantalla de Leds")
-    image(imagenRecortada, posColumna, posFilaSuperior, REGION_DE_INTERES_ANCHO, REGION_DE_INTERES_ALTO);
-    espejo1.mostrar(posColumna, posFilaInferior, REGION_DE_INTERES_ANCHO, REGION_DE_INTERES_ALTO);
-    espejo2.mostrarFraccionado(posColumna, posFilaSuperior);
-    posColumna += REGION_DE_INTERES_ANCHO + SEPARADOR;
-    
-    // TERCERA COLUMNA: imagen transformada para mapear y proyectar sobre el "Espejo 2"
-    espejo2.mostrar(posColumna, posFilaSuperior, VISTA_ANCHO, VISTA_ALTO);
-    posColumna += VISTA_ANCHO + SEPARADOR;
-    
-    // CUARTA COLUMNA: imagen transformada para mapear y proyectar sobre el "Espejo 3"
-    espejo3.mostrar(posColumna, posFilaSuperior, VISTA_ANCHO, VISTA_ALTO);
-    
+    if (MODO_MONITOREO_ACTIVADO) {
+      int posColumna = 0;    
+      int posFilaSuperior = 0;
+      int posFilaInferior = CAMARA_ALTO + SALIDA.SEPARADOR;
+
+      // PRIMERA COLUMNA: imagen original de la webcam y "Flujo Óptico"
+      image(imagenOriginal, posColumna, posFilaSuperior);
+      procesador.mostrar(posColumna, posFilaInferior, FLUJO_OPTICO_TECHO);
+      posColumna += imagenOriginal.width + SALIDA.SEPARADOR;
+      
+      // SEGUNDA COLUMNA: imagen recortada (región de interés) y el "Espejo 1" (la "Pantalla de Leds")
+      image(imagenRecortada, posColumna, posFilaSuperior, SALIDA.REGION_DE_INTERES_ANCHO, SALIDA.REGION_DE_INTERES_ALTO);
+      espejo1.mostrar(posColumna, posFilaInferior, SALIDA.REGION_DE_INTERES_ANCHO, SALIDA.REGION_DE_INTERES_ALTO);
+      espejo2.mostrarFraccionado(posColumna, posFilaSuperior);
+      posColumna += SALIDA.REGION_DE_INTERES_ANCHO + SALIDA.SEPARADOR;
+      
+      // TERCERA COLUMNA: imagen transformada para mapear y proyectar sobre el "Espejo 2"
+      espejo2.mostrar(posColumna, posFilaSuperior, SALIDA.VISTA_ANCHO, SALIDA.VISTA_ALTO);
+      posColumna += SALIDA.VISTA_ANCHO + SALIDA.SEPARADOR;
+      
+      // CUARTA COLUMNA: imagen transformada para mapear y proyectar sobre el "Espejo 3"
+      espejo3.mostrar(posColumna, posFilaSuperior, SALIDA.VISTA_ANCHO, SALIDA.VISTA_ALTO);
+    }
+    else {
+      int posColumna = SALIDA.VIDEO_ANCHO / 2 - SALIDA.SEPARADOR - int(SALIDA.VISTA_ANCHO * 1.5);    
+      int posFila = 60;
+      
+      // PRIMERA VISTA: Espejo "Fraccionador"
+      espejo2.mostrar(posColumna, posFila, SALIDA.VISTA_ANCHO, SALIDA.VISTA_ALTO);
+      posColumna += SALIDA.VISTA_ANCHO + SALIDA.SEPARADOR;
+      
+      // SEGUNDA VISTA: Espejo "Fragmentador"
+      espejo1.mostrar(posColumna, posFila, SALIDA.VISTA_ANCHO, SALIDA.VISTA_ALTO);
+      posColumna += SALIDA.VISTA_ANCHO + SALIDA.SEPARADOR;
+      
+      // TERCERA VISTA: Espejo "Fracturador"
+      espejo3.mostrar(posColumna, posFila, SALIDA.VISTA_ANCHO, SALIDA.VISTA_ALTO);
+      rect(posColumna, posFila + SALIDA.VISTA_ALTO, SALIDA.VISTA_ANCHO, SALIDA.VIDEO_ALTO - SALIDA.VISTA_ALTO - posFila);
+      rect(posColumna + SALIDA.VISTA_ANCHO, 0, SALIDA.VIDEO_ANCHO - posColumna - SALIDA.VISTA_ANCHO, SALIDA.VIDEO_ALTO);
+
+    }
     
     
     // 4. TRANSMISIÓN DEL VIDEO GENERADO
     // Finalmente, todo el contenido del de la ventana principal de Processing (el 
     // mosaico con el video de salida) es difundido con la librería de "Spout" para
     // poder ser mapeado y proyectado sobre las pantallas.
+    // La transmisión via "Spout" sólo es requerida si se va a hacer un mapping.
     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     //difusora.transmitir();
   }
- 
 }

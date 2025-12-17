@@ -118,28 +118,8 @@ class Fracturador implements Transformador {
    * escalada a los valores de ancho y alto recibidos como argumento.
    */
   public PImage salida(int ancho, int alto) {
-    actualizarSalida(ancho, alto);
     return imagenSalida.get();
   }
-  
-  /**
-   * actualizarSalida
-   * Método privado que actualiza los píxeles de la imagen fracturada de salida
-   * en caso que no se haya realizado después de la última vez que se ejecutó la 
-   * función "procesar" o que las dimensiones hayan variado. 
-   */
-  private void actualizarSalida(int ancho, int alto) {
-    if (actualizarSalida) {
-      push();
-      imagenSalida.beginDraw();
-      imagenSalida.background(0);
 
-      // ACA VA EL CODIGO QUE ACTUALIZA LA IMAGEN
-
-      imagenSalida.endDraw();
-      actualizarSalida = false;
-      pop();
-    }
-  } 
 
 }
