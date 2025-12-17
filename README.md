@@ -21,6 +21,11 @@ El trabajo realizado para este proyecto es una continuación de la investigació
 En el centro del tríptico, la pantalla está construida con 275 leds (11 columnas de 25 leds cada una). La imagen capturada por la webcam es interpretada por Processing para reducirla a una matriz de 275 píxeles y enviada (por el puerto serial) a una placa Arduino que enciende y apaga los leds correspondientes, produciendo el efecto de “fragmentación” de la imagen original.
 Los laterales del tríptico son dos pantallas de acrílico donde se proyectan imágenes también generadas programáticamente desde Processing a partir de la captura de video de la webcam.
 
+![Disposición de las pantallas del "espejo tríptico"](media/espejo-instalacion-01.jpg)
+
+![Espejo tríptico transformante](media/espejo-instalacion-02.jpg)
+
+
 ## Software utilizado
 - **Processing** es usado para procesar las imágenes capturadas por la cámara. Se utilizan las funciones de la librería de OpenCV para analizar las imágenes del video.
 - **Ableton** es usado para recibir por OSC los mensajes de Processing que contienen el cálculo del “Flujo Óptico” y para orquestar la reproducción del sonido correspondiente.
