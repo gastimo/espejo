@@ -1,8 +1,8 @@
 // 
 // FRACCIONADOR >>> (TRANSFORMADOR)
-// Objeto transformador que analiza y manipula la imagen capturada por la
-// webcam para producir una imagen transformada ("Espejo Transformante").
-// El fraccionamiento consiste en identificar las partes de la imagen, 
+// Objeto "transformador" que analiza y manipula la imagen capturada por
+// la webcam para producir una imagen transformada ("Espejo Transformante").
+// El "fraccionamiento" consiste en identificar las partes de la imagen, 
 // delimitarlas y aislarlas a través del uso de los métodos de "Face 
 // Recognition" de la librería OpenCV para Processing.
 //
@@ -35,7 +35,7 @@ class Fraccionador extends Fragmentador implements Transformador {
     // El objeto de OpenCV se crea recién acá, porque es recién en
     // este punto cuando se dispone de las dimensiones de la imagen
     if (opencv == null) {
-      opencv = new OpenCV(ventana, imagen.width, imagen.height);
+      opencv = new OpenCV(obtenerContenedor(), imagen.width, imagen.height);
     }
     super.procesar(imagen);
     opencv.loadImage(imagen);

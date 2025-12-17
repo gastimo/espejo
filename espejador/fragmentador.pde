@@ -1,7 +1,10 @@
 // 
 // FRAGMENTADOR >>> (TRANSFORMADOR)
-// Objeto responsable de realizar la fragmentación de la imagen
-// capturada en vivo, para desplegarla en el "Espejo de Leds".
+// Objeto "transformador" que analiza y manipula la imagen capturada por 
+// la webcam para producir una imagen transformada ("Espejo Transformante").
+// La "fragmentación" en reducir la imagen original a una matriz de píxeles.
+// Estos píxeles pueden ser utilizados, por ejemplo, para encender o apagar
+// cada uno de los leds de la "Pantalla de Leds".
 //
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 
@@ -74,6 +77,9 @@ class Fragmentador implements Transformador {
     this(null, 0, 0);
   }
   
+  public PApplet obtenerContenedor() {
+    return ventana;
+  }
   
   /**
    * procesar

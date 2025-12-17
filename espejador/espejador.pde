@@ -101,9 +101,9 @@ final int   FLUJO_OPTICO_FILAS    = 10;
 Camara camara;
 Difusora difusora;
 Procesador procesador;
-Transformador espejo1;
-Transformador espejo2;
-Transformador espejo3;
+Fragmentador espejo1;
+Fraccionador espejo2;
+Fracturador  espejo3;
 Transmisor transmisorDePixeles;
 TransmisorOSC transmisorDeEventos;
 PImage imagenOriginal;
@@ -144,7 +144,7 @@ void setup() {
   procesador = new Procesador(this, CAMARA_ANCHO, CAMARA_ALTO, FLUJO_OPTICO_COLUMNAS, FLUJO_OPTICO_FILAS);
   espejo1    = new Fragmentador(this, PROPORCION_ANCHO, PROPORCION_ALTO);
   espejo2    = new Fraccionador(this, VISTA_ANCHO / 10, VISTA_ALTO / 10);
-  espejo3    = new Fragmentador(this, VISTA_ANCHO / 6, VISTA_ALTO / 6);
+  espejo3    = new Fracturador(espejo2, 6);
 
 
   // 2. INICIALIZACIÓN DE TRANSMISORES (OSC Y SERIAL)
@@ -226,8 +226,8 @@ void draw() {
     
     // SEGUNDA COLUMNA: imagen recortada (región de interés) y el "Espejo 1" (la "Pantalla de Leds")
     image(imagenRecortada, posColumna, posFilaSuperior, REGION_DE_INTERES_ANCHO, REGION_DE_INTERES_ALTO);
-    ((Fraccionador) espejo2).mostrarFraccionado(posColumna, posFilaSuperior);
     espejo1.mostrar(posColumna, posFilaInferior, REGION_DE_INTERES_ANCHO, REGION_DE_INTERES_ALTO);
+    espejo2.mostrarFraccionado(posColumna, posFilaSuperior);
     posColumna += REGION_DE_INTERES_ANCHO + SEPARADOR;
     
     // TERCERA COLUMNA: imagen transformada para mapear y proyectar sobre el "Espejo 2"

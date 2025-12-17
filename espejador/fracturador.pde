@@ -1,15 +1,15 @@
 // 
 // FRACTURADOR >>> (TRANSFORMADOR)
-// Objeto transformador que analiza y manipula la imagen capturada por la
-// webcam para producir una imagen transformada ("Espejo Transformante").
-// La fractura consiste en el armado de un mosaico con las partes del  
-// de la imagen original.
+// Objeto "transformador" que analiza y manipula la imagen capturada por
+// la webcam para producir una imagen transformada ("Espejo Transformante").
+// La "Fractura" consiste en el armado de un mosaico con las partes del  
+// de la imagen original, identificadas por el "Fraccionador" a través de
+// la funciones de "Face Recognition" de OpenCV.
 //
 //   https://github.com/atduskgreg/opencv-processing
 //
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 
-import gab.opencv.*;
 import java.awt.Rectangle;
 
 
@@ -20,82 +20,126 @@ import java.awt.Rectangle;
  * Este transformador invoca a las funciones de "Face Recognition" de OpenCV para
  * generar imágenes fragmentadas a partir de estos estos elementos detectados.
  */
-class Fracturador {
-  OpenCV opencv;
-  Fragmentador fragmentador;
-  Rectangle[] fragmentacion;
+class Fracturador implements Transformador {
+  Fraccionador fracc;
+  int factorEscala;
+  PApplet ventana;
+  PImage imagenBase;
+  PImage imagenFracturada;
+  PGraphics imagenSalida;
+  boolean actualizarSalida = true;
+  int salidaAncho = 0;
+  int salidaAlto = 0;
 
-  public Fracturador(PApplet contenedor, int ancho, int alto, Fragmentador frag) {
-    opencv = new OpenCV(contenedor, ancho, alto);
-    fragmentador = frag;
+ 
+  public Fracturador(Fraccionador fraccionador, int escala) {
+    fracc = fraccionador;
+    ventana = fraccionador.obtenerContenedor();
+    factorEscala = escala;
   }
 
   public void procesar(PImage imagen) {
-    opencv.loadImage(imagen);
-    cargarFragmentos(OpenCV.CASCADE_FRONTALFACE);
-    cargarFragmentos(OpenCV.CASCADE_EYE, true);    
-    cargarFragmentos(OpenCV.CASCADE_NOSE, true);
-    cargarFragmentos(OpenCV.CASCADE_MOUTH, true);
+    imagenBase = imagen;
   }
 
-  
-  private void cargarFragmentos(String selector) {
-    cargarFragmentos(selector, false);
-  }
-
-
-  private void cargarFragmentos(String selector, boolean agregar) {
-    opencv.loadCascade(selector);  
-    if (!agregar) {
-      fragmentacion = opencv.detect();
-    }
-    else {
-      Rectangle[] f = opencv.detect();
-      Rectangle[] todos = new Rectangle[fragmentacion.length + f.length];
-      for (int i = 0; i < fragmentacion.length; i++) {
-        todos[i] = fragmentacion[i];
-      }      
-      for (int i = 0; i < f.length; i++) {
-        todos[i + fragmentacion.length] = f[i];
+  public void mostrar(int x, int y, int ancho, int alto) {
+      int ultimaFila = mostrar(x, y, ancho, alto, 1, 0, 0);
+      if (ultimaFila < alto) {
+        mostrar(x, y, ancho, alto, 1, 0, ultimaFila);
       }
-      fragmentacion = todos;
-    }
   }
-
   
-  public Rectangle[] fragmentos() {
-    return fragmentacion;
-  }
-
-
-  public void mostrar(int x, int y) {
-    mostrar(null, x, y, 0, 0, 0, 0);
-  }
-
-  
-  public void mostrar(PImage imagen, int x, int y, int anchoOriginal, int altoOriginal, int anchoFinal, int altoFinal) {
-    float ajusteX = 1.0;
-    float ajusteY = 1.0;
-    boolean espejar = false;
+  private int mostrar(int x, int y, int ancho, int alto, int iteracion, int indice, int filaIni) {
+    PImage img = imagenBase;
+    float ajusteX = ancho / img.width;
+    float ajusteY = alto / img.height;
+    int   columna = 0;
+    int   fila = filaIni;
+    Rectangle[] fragmentacion = fracc.fragmentos();
     
     push();
     noFill();
     stroke(0);
-    if (imagen != null) {
-      espejar = true;
-      ajusteX = anchoFinal / anchoOriginal;
-      ajusteY = altoFinal / altoOriginal;
-      fragmentador.mostrar(x, y, anchoFinal, altoFinal);
-    }
-    stroke(0, 255, 0);
-    strokeWeight(3);   
-    for (int i = 0; i < fragmentacion.length; i++) {
-      float fragX = fragmentacion[i].x * ajusteX;
-      float fragY = fragmentacion[i].y * ajusteY;
-      float fragAncho = fragmentacion[i].width * ajusteX;
-      float fragAlto  = fragmentacion[i].height * ajusteY;
-      rect(x + (espejar ? anchoFinal - fragX - fragAncho : fragX), y + fragY, fragAncho, fragAlto);
+    stroke(0);
+    strokeWeight(10);
+    for (int i = indice; i < fragmentacion.length; i++) {
+      PImage f = img.get(fragmentacion[i].x, fragmentacion[i].y, fragmentacion[i].width, fragmentacion[i].height);
+      int anchoF = int(f.width * ajusteX);
+      int altoF  = int(f.height * ajusteY);
+      if (anchoF < ancho * 0.4) {
+        anchoF *= 2.3;
+        altoF  *= 2.3;
+      }
+      if (fila + altoF > alto) {
+        mostrar(x + columna + anchoF, y, ancho, alto, 1, i+1, 0);
+        break;
+      }
+      if (columna + anchoF > ancho) {
+        mostrar(x, y + fila, ancho, alto, 1, i+1, fila);
+        break;
+      }
+      Fragmentador frag = new Fragmentador(ventana, anchoF / factorEscala, altoF / factorEscala);
+      frag.procesar(f);
+      image(frag.salida(anchoF, altoF), x + columna, y + fila, anchoF, altoF);
+      rect(x + columna, y + fila, anchoF, altoF);
+      if (iteracion > 0) {
+        mostrar(x + columna + anchoF, y + fila, ancho, alto, iteracion - 1, i+1, fila);
+      }
+      fila += altoF;
     }
     pop();
+    return fila;
+  }  
+  
+  
+  /**
+   * imagen
+   * Retorna el resultado del procesamiento de la imagen original
+   * en la forma de otra imagen (PImage) transformada.
+   */ 
+  public PImage imagen() {
+    return imagenFracturada;
+  }
+
+
+  /**
+   * imagenOriginal
+   * Retorna la imagen original que se le pasó al método procesar
+   * pero sin haberle realizado ninguna transformación.
+   */
+  public PImage imagenOriginal() {
+    return imagenBase;
+  }
+  
+  
+  /**
+   * salida
+   * Retorna una imagen (PImage) con la imagen fragmentada (pixelada) pero
+   * escalada a los valores de ancho y alto recibidos como argumento.
+   */
+  public PImage salida(int ancho, int alto) {
+    actualizarSalida(ancho, alto);
+    return imagenSalida.get();
+  }
+  
+  /**
+   * actualizarSalida
+   * Método privado que actualiza los píxeles de la imagen fracturada de salida
+   * en caso que no se haya realizado después de la última vez que se ejecutó la 
+   * función "procesar" o que las dimensiones hayan variado. 
+   */
+  private void actualizarSalida(int ancho, int alto) {
+    if (actualizarSalida) {
+      push();
+      imagenSalida.beginDraw();
+      imagenSalida.background(0);
+
+      // ACA VA EL CODIGO QUE ACTUALIZA LA IMAGEN
+
+      imagenSalida.endDraw();
+      actualizarSalida = false;
+      pop();
+    }
   } 
+
 }
