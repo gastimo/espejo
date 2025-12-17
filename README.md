@@ -1,6 +1,5 @@
 # Fractura expuesta. Devenires digitales fragmentados
-> Proyecto final para la materia "Programación de Entornos Sensoriales" - MAE - UNTREF
-> Autores: Gastón Martino y Diego Flores
+> Proyecto final para la materia "Programación de Entornos Sensoriales" - MAE - UNTREF / Autores: Gastón Martino y Diego Flores
 
 # Introducción
 En su artículo La doble vida del hipersujeto, Leonardo Solaas habla sobre la naturaleza fragmentaria y discontinua del *stream* (ese flujo de información que consumimos diariamente en las plataformas mediante el *scrolling*), donde cada publicación es independiente y separada de las demás, aunque conectadas entre sí por el oscuro y arbitrario mandato de los algoritmos.
