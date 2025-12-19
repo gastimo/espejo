@@ -1,4 +1,4 @@
-# Fractura expuesta. Devenires digitales fragmentados
+# Fractura expuesta. Confesiones algorítmicas
 > Proyecto final para la materia "Programación de Entornos Sensoriales" - MAE - UNTREF / Autores: Gastón Martino y Diego Flores
 
 # Introducción
@@ -32,7 +32,16 @@ Los laterales del tríptico son dos pantallas de acrílico donde se proyectan im
 - **Resolume+Spout** (opcional) es usado para mapear la gráfica generada desde Processing en las pantallas laterales del “espejo tríptico”.
 - La comunicación entre las computadoras es por **OSC** y la comunicación con Arduino es a través del puerto serial.
 
+
+![Espejo transformante tríptico](media/espejo-triptico-01.jpg)
+![Espejo transformante tríptico](media/espejo-triptico-02.jpg)
+
+> Espejo tríptico en funcionamiento. Retroproyección en pantallas laterales y leds en pantalla central.
+
+
 # Arquitectura del proyecto
+El proyecto precisa al menos dos computadoras (una para la gráfica y otra para los sonidos) que se comunican a través de OSC. Adicionalmente, se requiere un proyector para mapear las imágenes generadas sobre las pantallas laterales y, también, parlantes para el sonido.
+
 El siguiente diagrama muestra los equipos y dispositivos que componen la arquitectura básica del proyecto y la forma en que cada uno se comunica o conecta con los restantes.
 
 ![Versión #1 de la arquitectura del espejo tríptico (con 2 equipos)](media/espejo-arquitectura-01.png)
@@ -58,3 +67,4 @@ El equipo central (el módulo “Espejador”) es el encargado de procesar las i
 ![Captura #2 de las vistas generadas para el espejo tríptico](media/espejo-grafica-02.jpg)
 
 ![Captura #3 de las vistas generadas para el espejo tríptico](media/espejo-grafica-03.jpg)
+
