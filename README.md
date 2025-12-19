@@ -68,3 +68,11 @@ El equipo central (el módulo “Espejador”) es el encargado de procesar las i
 
 ![Captura #3 de las vistas generadas para el espejo tríptico](media/espejo-grafica-03.jpg)
 
+# El Sonido de los Espejos
+## La Voz del Algoritmo
+Siguiendo la línea fragmentaria de la imagen, la poética sonora de la instalación se propone exponer los oscuros pensamientos internos de un algoritmo que, de manera taxativa y enturbiada obtiene y segmenta datos ficticios provenientes de quién se acerque a interactuar con él. El mismo existe como un programa errante, entregado desesperadamente al sobre-análisis de la información proveniente del módulo “Espejador”, necesitado de las interacciones de sus usuarios.
+
+Este algoritmo fue formulado, en primera instancia, planificando un diagrama de estados que de cuenta de su comportamiento. Esencialmente, se distinguen dos estados principales, que implican la recepción o falta de interacciones por parte del usuario. Sumando complejidad al diagrama, a mayor cantidad de interacción, el algoritmo comienza a analizar datos cada vez más sensibles y personales. El diagrama puede expandirse clickeando la siguiente imagen.
+
+![Algoritmo para el sonido](media/algoritmo-sonido.png)
+

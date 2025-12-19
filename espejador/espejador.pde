@@ -40,8 +40,8 @@ boolean MODO_MONITOREO_ACTIVADO = false;
 // Configuración de las direcciones IPs de los equipos y de los puertos 
 // para transmitir los mensajes vía el protocolo OSC
 final String IP_DEL_ESPEJADOR    = "192.168.0.5";
-final String IP_DEL_SONORIZADOR  = "192.168.0.5";
-final String IP_DEL_REFLECTOR    = "192.168.0.5";
+final String IP_DEL_SONORIZADOR  = "192.168.0.228";
+final String IP_DEL_REFLECTOR    = "192.168.0.9";
 final int PUERTO_DEL_ESPEJADOR   = 12000;
 final int PUERTO_DEL_SONORIZADOR = 9000;
 final int PUERTO_DEL_REFLECTOR   = 12011;
@@ -73,7 +73,7 @@ boolean REFLECTAR_PIXELES = true;
 // PARÁMETROS PARA EL CÁLCULO DEL FLUJO OPTICO
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 // Valores para calcular el "flujo óptico" en la imagen de video capturada.
-final float FLUJO_OPTICO_TECHO    = 30;
+final float FLUJO_OPTICO_TECHO    = 21;
 final int   FLUJO_OPTICO_COLUMNAS = 10;
 final int   FLUJO_OPTICO_FILAS    = 10;
 
